@@ -8,7 +8,7 @@ module.exports = {
     version: "1.0",
     author: "Christus",
     countDown: 15,
-    role: 0,
+    role: 3,
     shortDescription: "Accept or delete friend requests",
     longDescription: "View and manage incoming friend requests with stylish formatting",
     category: "Utility",
