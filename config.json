@@ -21,20 +21,28 @@
     "ignoreCommand": []
   },
   "adminBot": [
-    "61580333625022"
+    "61580333625022",
+    "61573289767621",
+    "61568791604271"
   ],
   "premiumUsers": [
-    "61580333625022"
+    "61580333625022",
+    "61573289767621",
+    "61568791604271"
   ],
   "devUsers": [
-    "61580333625022"
+    "61580333625022",
+    "61573289767621",
+    "61568791604271"
   ],
   "notes_premiumUsers": "List of user IDs with premium access (role 3)",
   "notes_devUsers": "List of developer IDs with full access (role 4)",
   "whiteListMode": {
     "enable": false,
     "whiteListIds": [
-      "61580333625022"
+      "61580333625022",
+      "61573289767621",
+      "61568791604271"
     ],
     "notes": "if you enable this feature, only the ids in the whiteListIds list can use the bot"
   },
