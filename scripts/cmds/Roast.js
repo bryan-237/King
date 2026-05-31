@@ -1,4 +1,4 @@
-Cmd install roast.js fs = require("fs-extra");
+ fs = require("fs-extra");
 const { createCanvas } = require("canvas");
 const path = require("path");
 
