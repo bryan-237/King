@@ -1,4 +1,4 @@
-Cmd install gallery.js fs = require("fs-extra");
+fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
 
