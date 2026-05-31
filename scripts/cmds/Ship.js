@@ -1,4 +1,4 @@
-Cmd install ship.js fs = require("fs-extra");
+ fs = require("fs-extra");
 const { createCanvas, loadImage } = require("canvas");
 const axios = require("axios");
 const path = require("path");
