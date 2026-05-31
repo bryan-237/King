@@ -1,151 +1,133 @@
-
-const MAX_BET = 6000000;
+const fs = require("fs-extra");
+const { createCanvas } = require("canvas");
+const path = require("path");
 
 module.exports = {
   config: {
-    name: "slots",
-    aliases: ["slot"],
-    version: "1.4",
-    author: "Christus",
-    countDown: 8,
-    role: 0,
-    description: "🎰 Ultra-stylish slot machine with balanced odds and limits",
-    category: "game",
-    guide: {
-      en: "Use: {pn} [bet amount]"
-    }
+    name: "slot",
+    version: "3.0.0",
+    hasPermssion: 0,
+    credits: "Bryan",
+    description: "Machine à sous Otaku SSS-RANK",
+    commandCategory: "games",
+    usages: "[bet]",
+    cooldowns: 3
   },
 
-  onStart: async function ({ message, event, args, usersData }) {
-    const { senderID } = event;
-    const bet = parseInt(args[0]);
+  onStart: async function({ api, event, args, Users }) {
+    const { threadID, messageID, senderID } = event;
+    let name = await Users.getName(senderID).catch(() => "Joueur");
 
-    const formatMoney = (amount) => {
-      if (isNaN(amount)) return "💲0";
-      amount = Number(amount);
-      const scales = [
-        { value: 1e15, suffix: 'Q', color: '🌈' },
-        { value: 1e12, suffix: 'T', color: '✨' },
-        { value: 1e9, suffix: 'B', color: '💎' },
-        { value: 1e6, suffix: 'M', color: '💰' },
-        { value: 1e3, suffix: 'k', color: '💵' }
-      ];
-      const scale = scales.find(s => amount >= s.value);
-      if (scale) {
-        const scaledValue = amount / scale.value;
-        return `${scale.color}${scaledValue.toFixed(2)}${scale.suffix}`;
-      }
-      return `💲${amount.toLocaleString()}`;
-    };
+    let bet = parseInt(args[0]) || 200;
+    let userData = await Users.getData(senderID).catch(() => ({money: 0}));
+    let balance = userData.money || 0;
 
-    if (isNaN(bet) || bet <= 0)
-      return message.reply("🔴 ERROR: Please enter a valid bet amount!");
+    if(balance < bet) return api.sendMessage(`💀 Balance insuffisante: ${balance} POWER`, threadID, messageID);
 
-    if (bet > MAX_BET)
-      return message.reply(`🚫 MAX BET LIMIT: You can bet up to ${formatMoney(MAX_BET)} only.`);
+    let symbols = ["⚡","🔥","💎","🍋","🍒","⭐"];
+    let roll = [symbols[Math.floor(Math.random()*6)], symbols[Math.floor(Math.random()*6)], symbols[Math.floor(Math.random()*6)]];
 
-    const user = await usersData.get(senderID);
+    let win = 0;
+    let type = "lose";
+    let title = "SLOT MACHINE";
+    let subtitle = "";
+    let color1 = "#00FFFF";
+    let color2 = "#1A0033";
 
-    // ✅ Bangladesh date support
-    const getBangladeshDate = () => {
-      return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
-    };
-
-    const today = getBangladeshDate(); // e.g., 2025-07-21
-
-    // Tracking daily play count
-    const lastPlayDay = user.data?.slotsDay || "";
-    const playCount = user.data?.slotsCount || 0;
-    const isSameDay = today === lastPlayDay;
-    const currentCount = isSameDay ? playCount : 0;
-
-    if (currentCount >= DAILY_LIMIT) {
-      return message.reply(`⏳ DAILY LIMIT: You can only play ${DAILY_LIMIT} times per day. Try again tomorrow (Bangladesh time)!`);
-    }
-
-    if (user.money < bet)
-      return message.reply(`🔴 INSUFFICIENT FUNDS: You need ${formatMoney(bet - user.money)} more to play!`);
-
-    const symbols = [
-      { emoji: "🍒", weight: 30 },
-      { emoji: "🍋", weight: 25 },
-      { emoji: "🍇", weight: 20 },
-      { emoji: "🍉", weight: 15 },
-      { emoji: "⭐", weight: 7 },
-      { emoji: "7️⃣", weight: 3 }
-    ];
-
-    const roll = () => {
-      const totalWeight = symbols.reduce((sum, symbol) => sum + symbol.weight, 0);
-      let random = Math.random() * totalWeight;
-      for (const symbol of symbols) {
-        if (random < symbol.weight) return symbol.emoji;
-        random -= symbol.weight;
-      }
-      return symbols[0].emoji;
-    };
-
-    const slot1 = roll();
-    const slot2 = roll();
-    const slot3 = roll();
-
-    let winnings = 0;
-    let outcome;
-    let winType = "";
-    let bonus = "";
-
-    if (slot1 === "7️⃣" && slot2 === "7️⃣" && slot3 === "7️⃣") {
-      winnings = bet * 10;
-      outcome = "🔥 MEGA JACKPOT! TRIPLE 7️⃣!";
-      winType = "💎 MAX WIN";
-      bonus = "🎆 BONUS: +3% to your total balance!";
-      await usersData.set(senderID, { money: user.money * 1.03 });
-    } else if (slot1 === slot2 && slot2 === slot3) {
-      winnings = bet * 5;
-      outcome = "💰 JACKPOT! 3 matching symbols!";
-      winType = "💫 BIG WIN";
-    } else if (slot1 === slot2 || slot2 === slot3 || slot1 === slot3) {
-      winnings = bet * 2;
-      outcome = "✨ NICE! 2 matching symbols!";
-      winType = "🌟 WIN";
-    } else if (Math.random() < 0.5) {
-      winnings = bet * 1.5;
-      outcome = "🎯 LUCKY SPIN! Bonus win!";
-      winType = "🍀 SMALL WIN";
+    if(roll[0] == roll[1] && roll[1] == roll[2]) {
+      win = 10000;
+      type = "jackpot";
+      title = "SSS-RANK JACKPOT!!!";
+      subtitle = "3 matching symbols! CRIT!!!";
+      color1 = "#FFD700";
+      color2 = "#FFA500";
+    } else if(roll[0] == roll[1] || roll[1] == roll[2] || roll[0] == roll[2]) {
+      win = 400;
+      type = "win";
+      title = "SLOT MACHINE";
+      subtitle = "2 matching symbols! NICE!";
+      color1 = "#00FFFF";
+      color2 = "#1A0033";
     } else {
-      winnings = -bet;
-      outcome = "💸 BETTER LUCK NEXT TIME!";
-      winType = "☠️ LOSS";
+      type = "lose";
+      title = "F-RANK... PERDU 💀";
+      subtitle = "0 matching... Try again!";
+      color1 = "#FF0000";
+      color2 = "#330000";
     }
 
-    const newBalance = user.money + winnings;
+    await Users.setData(senderID, { money: balance - bet });
+    if(win > 0) await Users.setData(senderID, { money: balance - bet + win + bet });
+    let newBalance = (await Users.getData(senderID)).money;
 
-    await usersData.set(senderID, {
-      money: newBalance,
-      "data.slotsDay": today,
-      "data.slotsCount": currentCount + 1
-    });
+    // Canvas 800x600 style ton image
+    let canvas = createCanvas(800, 600);
+    let ctx = canvas.getContext("2d");
 
-    const slotBox =
-      "╔═════════════════════╗\n" +
-      "║  🎰 SLOT MACHINE 🎰  ║\n" +
-      "╠═════════════════════╣\n" +
-      `║     [ ${slot1} | ${slot2} | ${slot3} ]     ║\n` +
-      "╚═════════════════════╝";
+    // Background gradient violet/noir
+    let grad = ctx.createLinearGradient(0,0,0,600);
+    grad.addColorStop(0, "#0A0A0A");
+    grad.addColorStop(1, color2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,800,600);
 
-    const resultColor = winnings >= 0 ? "🟢" : "🔴";
-    const resultText = winnings >= 0
-      ? `🏆 WON: ${formatMoney(winnings)}`
-      : `💸 LOST: ${formatMoney(bet)}`;
+    // Double bordure comme ton image: or + cyan
+    ctx.strokeStyle = color1;
+    ctx.lineWidth = 10;
+    ctx.shadowColor = color1;
+    ctx.shadowBlur = 40;
+    ctx.strokeRect(25,25,750,550);
 
-    const messageContent =
-      `${slotBox}\n\n` +
-      `🎯 RESULT: ${outcome}\n` +
-      `${winType ? `${winType}\n` : ""}` +
-      `${bonus ? `${bonus}\n` : ""}` +
-      `\n${resultColor} ${resultText}` +
-      `\n💰 BALANCE: ${formatMoney(newBalance)}` +
-      `\n🧮 SPINS USED TODAY: ${currentCount + 1}/${DAILY_LIMIT}` +
-      `\n\n💡 TIP: Higher bets increase jackpot chances!`;
+    ctx.strokeStyle = "#00FFFF";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(40,40,720,520);
+    ctx.shadowBlur = 0;
 
-    return message.reply(messageContent)
+    // Titre SSS-RANK JACKPOT!!!
+    ctx.fillStyle = "#FFD700";
+    ctx.shadowColor = "#FFD700";
+    ctx.shadowBlur = 30;
+    ctx.font = "bold 50px Impact";
+    ctx.textAlign = "center";
+    ctx.fillText(title, 400, 80);
+    ctx.shadowBlur = 0;
+
+    // Slots style boîte violette
+    ctx.font = "100px Arial";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.shadowColor = color1;
+    ctx.shadowBlur = 20;
+    ctx.fillText(`[ ${roll[0]} | ${roll[1]} | ${roll[2]} ]`, 400, 200);
+    ctx.shadowBlur = 0;
+
+    // Subtitle
+    ctx.fillStyle = "#FFD700";
+    ctx.font = "bold 28px Arial";
+    ctx.fillText(subtitle, 400, 280);
+
+    // WON
+    ctx.font = "bold 60px Impact";
+    ctx.fillStyle = type == "jackpot"? "#FFD700" : type == "win"? "#00FFFF" : "#FF0000";
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 25;
+    ctx.fillText(`WON: ${win} POWER`, 400, 370);
+    ctx.shadowBlur = 0;
+
+    // BALANCE
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 32px Arial";
+    ctx.fillText(`BALANCE: ${newBalance} POWER`, 400, 450);
+
+    // Spins
+    ctx.fillStyle = "#00FFFF";
+    ctx.font = "24px Arial";
+    ctx.fillText(`SPINS USED TODAY: 1/100`, 400, 500);
+
+    let cachePath = path.join(__dirname, "cache");
+    await fs.ensureDir(cachePath);
+    let pathImg = path.join(cachePath, `slot_${senderID}.png`);
+    fs.writeFileSync(pathImg, canvas.toBuffer());
+
+    api.sendMessage({attachment: fs.createReadStream(pathImg)}, threadID, () => fs.unlinkSync(pathImg), messageID);
+  }
+        }
