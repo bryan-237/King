@@ -1,4 +1,4 @@
-Cmd install card.js const fs = require("fs-extra");
+ const fs = require("fs-extra");
 const { createCanvas, loadImage } = require("canvas");
 const path = require("path");
 
