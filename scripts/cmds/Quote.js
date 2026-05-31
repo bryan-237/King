@@ -1,4 +1,4 @@
- module.exports = {
+module.exports = {
   config: {
     name: "quote",
     version: "2.0.0",
