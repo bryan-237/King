@@ -1,4 +1,4 @@
-const DAILY_LIMIT = 100;
+
 const MAX_BET = 6000000;
 
 module.exports = {
@@ -148,6 +148,4 @@ module.exports = {
       `\n🧮 SPINS USED TODAY: ${currentCount + 1}/${DAILY_LIMIT}` +
       `\n\n💡 TIP: Higher bets increase jackpot chances!`;
 
-    return message.reply(messageContent);
-  }
-};
+    return message.reply(messageContent)
