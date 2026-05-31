@@ -1,4 +1,4 @@
-cmd install daily.js const { createCanvas, loadImage } = require("canvas");
+const { createCanvas, loadImage } = require("canvas");
 const fs = require("fs-extra");
 const path = require("path");
 const moment = require("moment-timezone");
